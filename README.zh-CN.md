@@ -92,10 +92,10 @@ sudo ./reinstall.sh \
   --password 'console-password'
 ```
 
-使用中国大陆友好的镜像源、DNS 和 NTP：
+使用中国大陆友好的镜像源、DNS、NTP 和时区：
 
 ```sh
-sudo ./reinstall.sh --china --timezone Asia/Shanghai
+sudo ./reinstall.sh --china
 ```
 
 添加 1 GiB swap 分区和额外软件包：
@@ -120,7 +120,7 @@ sudo ./reinstall.sh \
 | --- | --- |
 | `--google` | 使用 Google DNS 和 `time.google.com`，镜像源保持默认 Debian 镜像。 |
 | `--cloudflare` | 使用 Cloudflare DNS 和 `time.cloudflare.com`，镜像源保持默认 Debian 镜像。 |
-| `--china` | 使用清华镜像源、中国大陆友好 DNS 和阿里云 NTP。 |
+| `--china` | 使用清华镜像源、中国大陆友好 DNS、阿里云 NTP 和 `Asia/Shanghai` 时区。 |
 
 ### 系统
 
@@ -155,11 +155,14 @@ network-console 使用密钥登录，请使用 `--authorized-keys-url`。
 | --- | --- | --- |
 | `--dns 'ADDRS'` | `8.8.8.8 1.1.1.1` | IPv4 DNS 服务器。 |
 | `--dns6 'ADDRS'` | `2001:4860:4860::8888 2606:4700:4700::1111` | IPv6 DNS 服务器。 |
-| `--ntp HOST` | `time.google.com` | NTP 服务器。 |
+| `--ntp HOST` | `time.google.com` | Debian Installer 和安装后系统 chrony 服务使用的 NTP 服务器。 |
 | `--ethx` | 禁用 | 禁用 predictable interface names，使用 `eth0` 这类网卡名。 |
 
 脚本会检测当前静态网络配置，并写入 preseed。当前活跃网卡上的额外全局 IPv4
 和 IPv6 地址会追加到安装后系统的 `/etc/network/interfaces`。
+
+安装后的系统会默认安装 chrony。脚本会把选定的 `--ntp` 主机写成 chrony
+首次启动时使用的时间源，并启用 chrony 服务，让系统时间在日常包管理操作前自动校准。
 
 ### 镜像源和代理
 

@@ -195,6 +195,17 @@ configure_sshd() {
     target_script_add "set sshd $1" sed -Ei \""s/^#?$1 .+/$1 $2/"\" /etc/ssh/sshd_config
 }
 
+configure_chrony() {
+    append_plan_package chrony
+
+    target_script_add 'create chrony sources directory' 'mkdir -p /etc/chrony/sources.d'
+    target_script_add 'ensure chrony reads sources directory' "grep -Eq '^sourcedir[[:space:]]+/etc/chrony/sources.d' /etc/chrony/chrony.conf || printf '%s\n' 'sourcedir /etc/chrony/sources.d' >> /etc/chrony/chrony.conf"
+    target_script_add 'disable default chrony sources' "sed -Ei 's/^([[:space:]]*)(pool|server|peer)[[:space:]]+/# disabled by reinstall.sh: &/' /etc/chrony/chrony.conf"
+    target_script_add 'write chrony reinstall source' "printf '%s\n' $(sh_quote "server $ntp iburst") > /etc/chrony/sources.d/reinstall-ntp.sources"
+    target_script_add 'ensure chrony can step clock on first boot' "grep -Eq '^makestep[[:space:]]+' /etc/chrony/chrony.conf || printf '%s\n' 'makestep 1.0 3' >> /etc/chrony/chrony.conf"
+    target_script_add 'enable chrony service' 'systemctl enable chrony >/dev/null 2>&1 || true'
+}
+
 prompt_password_if_needed() {
     local prompt=
 
@@ -377,7 +388,7 @@ print_dry_run() {
 emit_late_command_preseed() {
     late_command='true'
     if [ -n "$target_script_body" ]; then
-        late_command="$late_command; cp /late-command.sh /target/root/reinstall-late-command.sh; chmod +x /target/root/reinstall-late-command.sh; in-target sh /root/reinstall-late-command.sh"
+        late_command="$late_command; cp /late-command.sh /target/root/reinstall-late-command.sh; chmod +x /target/root/reinstall-late-command.sh; in-target sh /root/reinstall-late-command.sh; rm -f /target/root/reinstall-late-command.sh"
     fi
 
     printf '%s\n' "d-i preseed/late_command string $late_command" | ps_raw
@@ -499,6 +510,7 @@ derive_install_plan() {
     apt_contrib=false
     apt_non_free=false
     apt_non_free_firmware=true
+    configure_chrony
 
     installer_directory="/boot/debian-$suite"
     log_file="$installer_directory/reinstall.log"
@@ -1058,6 +1070,7 @@ parse_cli() {
                 dns6='2400:3200::1 2402:4e00::'
                 split_mirror_url https://mirrors.tuna.tsinghua.edu.cn/debian
                 ntp=ntp.cloud.aliyuncs.com
+                timezone=Asia/Shanghai
                 ;;
             --dns)
                 dns=$2

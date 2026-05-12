@@ -97,10 +97,10 @@ sudo ./reinstall.sh \
   --password 'console-password'
 ```
 
-China-friendly mirror, DNS, and NTP:
+China-friendly mirror, DNS, NTP, and timezone:
 
 ```sh
-sudo ./reinstall.sh --china --timezone Asia/Shanghai
+sudo ./reinstall.sh --china
 ```
 
 Add a 1 GiB swap partition and extra packages:
@@ -125,7 +125,7 @@ sudo ./reinstall.sh \
 | --- | --- |
 | `--google` | Use Google DNS and `time.google.com` with the default Debian mirror. |
 | `--cloudflare` | Use Cloudflare DNS and `time.cloudflare.com` with the default Debian mirror. |
-| `--china` | Use Tsinghua mirror, China-friendly DNS, and Aliyun NTP. |
+| `--china` | Use Tsinghua mirror, China-friendly DNS, Aliyun NTP, and `Asia/Shanghai` timezone. |
 
 ### System
 
@@ -161,12 +161,16 @@ Debian Installer network console, use `--authorized-keys-url`.
 | --- | --- | --- |
 | `--dns 'ADDRS'` | `8.8.8.8 1.1.1.1` | IPv4 DNS servers. |
 | `--dns6 'ADDRS'` | `2001:4860:4860::8888 2606:4700:4700::1111` | IPv6 DNS servers. |
-| `--ntp HOST` | `time.google.com` | NTP server. |
+| `--ntp HOST` | `time.google.com` | NTP server for Debian Installer and the installed system's chrony service. |
 | `--ethx` | Disabled | Disable predictable interface names and use names like `eth0`. |
 
 The script detects the current static network configuration and writes it into
 preseed. Extra global IPv4 and IPv6 addresses on the active interface are
 appended to the installed system's `/etc/network/interfaces`.
+
+The installed system includes chrony by default. The script writes the selected
+`--ntp` host as chrony's first-boot source and enables the chrony service so the
+clock is corrected before normal package operations.
 
 ### Mirror and Proxy
 
